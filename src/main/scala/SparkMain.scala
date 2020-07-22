@@ -35,7 +35,7 @@ object SparkMain extends App {
 
   val jsonDf = spark
     .read
-    .option("multiLine", true)
+    .option("multiLine", value = true)
     .json(jsonFilePath)
 
 
@@ -49,25 +49,24 @@ object SparkMain extends App {
     .toList
 
   def morphByAttrs(inputDf: DataFrame, columnProcessorAttrs: List[ColumnProcessorAttrs]): Try[DataFrame] = Try {
-    columnProcessorAttrs.isEmpty match {
-      case true => inputDf
-      case _ => {
-        val curColumnProcessorAttrs = columnProcessorAttrs.head
-        val targetDataType = CatalystSqlParser.parseDataType(curColumnProcessorAttrs.new_data_type)
-        val modifiedDf = targetDataType match {
-          case date: DateType => inputDf.withColumn(curColumnProcessorAttrs.new_col_name, to_date(col(curColumnProcessorAttrs.existing_col_name), curColumnProcessorAttrs.date_expression.getOrElse("dd-MM-yyyy")))
-          case _ => inputDf.withColumn(curColumnProcessorAttrs.new_col_name, col(curColumnProcessorAttrs.existing_col_name).cast(targetDataType))
-        }
-
-        val result = morphByAttrs(modifiedDf, columnProcessorAttrs.tail) match {
-          case Success(df) => df
-          case Failure(exception) => {
-            log.error(exception)
-            inputDf.withColumnRenamed(curColumnProcessorAttrs.existing_col_name, curColumnProcessorAttrs.new_col_name)
-          }
-        }
-        result
+    if (columnProcessorAttrs.isEmpty) {
+      inputDf
+    } else {
+      val curColumnProcessorAttrs = columnProcessorAttrs.head
+      val targetDataType = CatalystSqlParser.parseDataType(curColumnProcessorAttrs.new_data_type)
+      val modifiedDf = targetDataType match {
+        case date: DateType => inputDf.withColumn(curColumnProcessorAttrs.new_col_name, to_date(col(curColumnProcessorAttrs.existing_col_name), curColumnProcessorAttrs.date_expression.getOrElse("dd-MM-yyyy")))
+        case _ => inputDf.withColumn(curColumnProcessorAttrs.new_col_name, col(curColumnProcessorAttrs.existing_col_name).cast(targetDataType))
       }
+
+      val result = morphByAttrs(modifiedDf, columnProcessorAttrs.tail) match {
+        case Success(df) => df
+        case Failure(exception) => {
+          log.error(exception)
+          inputDf.withColumnRenamed(curColumnProcessorAttrs.existing_col_name, curColumnProcessorAttrs.new_col_name)
+        }
+      }
+      result
     }
   }
 
