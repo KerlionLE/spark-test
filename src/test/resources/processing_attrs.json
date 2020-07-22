@@ -1,0 +1,5 @@
+[
+  {"existing_col_name" : "name", "new_col_name" : "first_name", "new_data_type" : "string"},
+  {"existing_col_name" : "age", "new_col_name" : "total_years", "new_data_type" : "integer"},
+  {"existing_col_name" : "birthday", "new_col_name" : "d_o_b", "new_data_type" : "date", "date_expression" : "dd-MM-yyyy"}
+]
