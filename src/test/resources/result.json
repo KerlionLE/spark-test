@@ -1,0 +1,3 @@
+{"Column":"first_name","Unique_values":2,"Values":{"Lisa":1,"John":1}}
+{"Column":"total_years","Unique_values":1,"Values":{"26":2}}
+{"Column":"d_o_b","Unique_values":2,"Values":{"1996-01-26":1,"1995-01-26":2}}
